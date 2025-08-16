@@ -468,10 +468,16 @@ final class SimplifiedBluetoothService: NSObject {
         if noiseService.hasEstablishedSession(with: recipientID) {
             // Encrypt and send
             do {
-                // Create message payload with ID: [type byte] + [ID:xxxxx|content]
+                // Create TLV-encoded private message
+                let privateMessage = PrivateMessagePacket(messageID: messageID, content: content)
+                guard let tlvData = privateMessage.encode() else {
+                    SecureLogger.log("Failed to encode private message with TLV", category: SecureLogger.noise, level: .error)
+                    return
+                }
+                
+                // Create message payload with TLV: [type byte] + [TLV data]
                 var messagePayload = Data([NoisePayloadType.privateMessage.rawValue])
-                let messageWithID = "ID:\(messageID)|\(content)"
-                messagePayload.append(contentsOf: messageWithID.utf8)
+                messagePayload.append(tlvData)
                 
                 let encrypted = try noiseService.encrypt(messagePayload, for: recipientID)
                 
@@ -1050,18 +1056,11 @@ final class SimplifiedBluetoothService: NSObject {
             
             switch NoisePayloadType(rawValue: payloadType) {
             case .privateMessage:
-                guard let content = String(data: payloadData, encoding: .utf8) else { return }
-                
-                // Extract message ID if present (format: "ID:xxxxx|content")
-                var messageID = UUID().uuidString
-                var messageContent = content
-                if content.hasPrefix("ID:") {
-                    let parts = content.split(separator: "|", maxSplits: 1)
-                    if parts.count == 2 {
-                        messageID = String(parts[0].dropFirst(3)) // Remove "ID:"
-                        messageContent = String(parts[1])
-                    }
-                }
+                // Try to decode as TLV first
+                guard let privateMessage = PrivateMessagePacket.decode(from: Data(payloadData)) else { return }
+                // Successfully decoded TLV format
+                let messageID = privateMessage.messageID
+                let messageContent = privateMessage.content
                 
                 // Parse mentions even in private messages
                 let mentions = parseMentions(from: messageContent)
@@ -1079,7 +1078,7 @@ final class SimplifiedBluetoothService: NSObject {
                     mentions: mentions.isEmpty ? nil : mentions
                 )
                 
-                SecureLogger.log("🔓 Decrypted PM from \(message.sender): \(messageContent.prefix(30))...", category: SecureLogger.session, level: .info)
+                SecureLogger.log("🔓 Decrypted TLV PM from \(message.sender): \(messageContent.prefix(30))...", category: SecureLogger.session, level: .info)
                 
                 // Send on main thread
                 notifyUI { [weak self] in
@@ -1089,7 +1088,6 @@ final class SimplifiedBluetoothService: NSObject {
                 // Send delivery ACK
                 sendDeliveryAck(for: messageID, to: peerID)
                 
-                // Don't send announce here - the keep-alive timer handles it
                 
             case .delivered:
                 // Handle delivery ACK
@@ -2027,5 +2025,61 @@ private struct AnnouncementPacket {
         
         guard let nickname = nickname, let publicKey = publicKey else { return nil }
         return AnnouncementPacket(nickname: nickname, publicKey: publicKey)
+    }
+}
+
+private struct PrivateMessagePacket {
+    let messageID: String
+    let content: String
+    
+    private enum TLVType: UInt8 {
+        case messageID = 0x00
+        case content = 0x01
+    }
+    
+    func encode() -> Data? {
+        var data = Data()
+        
+        // TLV for messageID
+        guard let messageIDData = messageID.data(using: .utf8), messageIDData.count <= 255 else { return nil }
+        data.append(TLVType.messageID.rawValue)
+        data.append(UInt8(messageIDData.count))
+        data.append(messageIDData)
+        
+        // TLV for content
+        guard let contentData = content.data(using: .utf8), contentData.count <= 255 else { return nil }
+        data.append(TLVType.content.rawValue)
+        data.append(UInt8(contentData.count))
+        data.append(contentData)
+        
+        return data
+    }
+    
+    static func decode(from data: Data) -> PrivateMessagePacket? {
+        var offset = 0
+        var messageID: String?
+        var content: String?
+        
+        while offset + 2 <= data.count {
+            guard let type = TLVType(rawValue: data[offset]) else { return nil }
+            offset += 1
+            
+            let length = Int(data[offset])
+            offset += 1
+            
+            guard offset + length <= data.count else { return nil }
+            let value = data[offset..<offset + length]
+            offset += length
+            
+            switch type {
+            case .messageID:
+                messageID = String(data: value, encoding: .utf8)
+            case .content:
+                content = String(data: value, encoding: .utf8)
+            }
+        }
+        
+        guard let messageID = messageID, let content = content else { return nil }
+        return PrivateMessagePacket(messageID: messageID, content: content)
     }
 }
