@@ -27,7 +27,7 @@ targets:
     info:
       path: bitchat/Info.plist
       properties:
-        CFBundleDisplayName: bitchat
+        CFBundleDisplayName: koine
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSBluetoothAlwaysUsageDescription: bitchat uses Bluetooth to create a secure mesh network for chatting with nearby users.
@@ -79,7 +79,7 @@ targets:
     info:
       path: bitchat/Info.plist
       properties:
-        CFBundleDisplayName: bitchat
+        CFBundleDisplayName: koine
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
@@ -121,7 +121,7 @@ targets:
     info:
       path: bitchatShareExtension/Info.plist
       properties:
-        CFBundleDisplayName: bitchat
+        CFBundleDisplayName: koine
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
