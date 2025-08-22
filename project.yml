@@ -1,6 +1,6 @@
 name: bitchat
 options:
-  bundleIdPrefix: chat.bitchat
+  bundleIdPrefix: chat.koine.bitchat
   deploymentTarget:
     iOS: 16.0
     macOS: 13.0
@@ -50,7 +50,7 @@ targets:
         # xcodegen quirk: include some macOS properties in iOS target
         LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: chat.bitchat
+      PRODUCT_BUNDLE_IDENTIFIER: chat.koine.bitchat
       PRODUCT_NAME: bitchat
       INFOPLIST_FILE: bitchat/Info.plist
       ENABLE_PREVIEWS: YES
@@ -97,7 +97,7 @@ targets:
           - UIInterfaceOrientationPortrait
         UIRequiresFullScreen: true
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: chat.bitchat
+      PRODUCT_BUNDLE_IDENTIFIER: chat.koine.bitchat
       PRODUCT_NAME: bitchat
       INFOPLIST_FILE: bitchat/Info.plist
       ENABLE_PREVIEWS: YES
@@ -133,7 +133,7 @@ targets:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
               NSExtensionActivationSupportsImageWithMaxCount: 1
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: chat.bitchat.ShareExtension
+      PRODUCT_BUNDLE_IDENTIFIER: chat.koine.bitchat.ShareExtension
       INFOPLIST_FILE: bitchatShareExtension/Info.plist
       SWIFT_VERSION: 5.0
       IPHONEOS_DEPLOYMENT_TARGET: 16.0
@@ -152,7 +152,7 @@ targets:
     dependencies:
       - target: bitchat_iOS
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: chat.bitchat.tests
+      PRODUCT_BUNDLE_IDENTIFIER: chat.koine.bitchat.tests
       INFOPLIST_FILE: bitchatTests/Info.plist
       SWIFT_VERSION: 5.0
       IPHONEOS_DEPLOYMENT_TARGET: 16.0
@@ -171,7 +171,7 @@ targets:
     dependencies:
       - target: bitchat_macOS
     settings:
-      PRODUCT_BUNDLE_IDENTIFIER: chat.bitchat.tests
+      PRODUCT_BUNDLE_IDENTIFIER: chat.koine.bitchat.tests
       INFOPLIST_FILE: bitchatTests/Info.plist
       SWIFT_VERSION: 5.0
       MACOSX_DEPLOYMENT_TARGET: 13.0
